@@ -1,0 +1,107 @@
+Since UNIX is a multi-user/multi-tasking system, it is conceivable if more than one process can act on a single file simultaneously. In order to understand how this is accomplished, we need to examine some kernel data structures which relate to files
+
+The kernel maintains a process table
+	each process table entry has a table of file descriptors, which 	contain:
+	the file descriptor flags
+	a pointer to a file table entry
+The kernel maintains a file  table; each entry contains
+	file status flags (O_APPEND, O_SYNC, O_RDONLY, etc.)
+	current offset
+	pointer to a vnode table entry
+a vnode structure contains
+	vnode information
+	inode infoemation (such as current file size)
+
+if we write data and the file offset is larger than the current file size , we change the current file size in i-node table entry
+
+To seek to the end lseek will copy the current file size into the current file offset
+To seek to the begining of the file, simply set the offset to 0.
+
+lseek is entirely independent of the file sie it doe'nt need to go to the disk and fetch info from there rather it operates entirely on the meta info.
+
+atomic operations are operartion that are guranteed to complete in the entirely without another process being able to interfere not at all.
+
+pread and pwrite atomically seek before issuing the read and write operation.
+
+O_APPEND results in atomic operation
+
+echo foo > file # O_WRONLY | O_CREAT
+echo bar > file # O_WRONLY  O_CREAT | O_TRUNC
+or
+echo foo >> file  # O_WRONLY | O_CREAT
+
+output redirection
+
+redirect file descriptor 2 to another file
+ls -l file /nowhere 2>/dev/null
+
+ls -l file /nowhere >file
+
+In general messages to stderr are unbuffere and stdout are buffered whihch is why you likely see error msgs prior to normal output when both are connected to the terminal . But of course there's a better way to ensure stderr and stdout go to the same place 
+
+put stdout to the file and put stderr wherever stdout point to
+
+#include <unistd.h>
+int dup(int oldfd);
+int dup2(int oldfd, int newfd);
+
+dup system call duplicates an existing file descriptor and you get back the secoond file handle pointing to the same file table entry as the first one.
+
+dup2(STDOUT_FILENO,STDERR_FILENO) < 0;
+
+file descriptor control
+#include <fcntl.h>
+
+int fcntl(int fd, int cmd, ...);
+	returns: depends on cmd, -1 on error
+
+fcntl(2) is one of those "catch-all" functions with a myriad of purposes. Here they all relate to changing properties of an already open file.
+
+F_DUPFD - duplicate file descriptors
+F_GETFD - get file descriptor flags
+F_SETFD - set file descriptor flags
+F_GETFL - get file status flags
+F_SETFL - set file status flags
+
+synchronous output will wait for I/O to be flushed to disk after each call, but asynchronus output allows the OS to handle this more efficiently and cache I/O a bit.
+
+asynchronous faster than synchronous mode
+
+get specific flags 
+flags = fcntl(STDOUT_FILENO, F_GETFL, 0)) < 0)
+flags |= O_SYNC;
+
+set specific flags
+fcntl(STDOUT_FILENO, F_SETFL, flags)
+
+
+ioctl
+#include <sys/ioctl.h>
+int ioctl(int fd, unsigned long request, ...);
+		returns : depends on request, -1 on error 
+
+On Unix, many many interfaces have been shoehorned into the file descriptor API and things that aren'nt files at all may have certain flags or other type of device speific settings
+
+The ioctl system call is often used to tickle those flags for things like terminal I/O, magnetic tape etc.
+
+We mentioned this here for completeness sake only, but you are encouraged to reas 
+
+File descriptors represented as files
+/dev/stdin. /dev/stdout, and /dev/stderr devices 
+
+to get inode no.
+ls -lid
+
+/proc is the mountpoint for procfs a pseudo file system that allows for a no. of process specific properties to manifest in the file system
+
+fifo, sockets and pipes => IPC
+
+ls -l /dev/fd/
+ls -l/dev/std*
+ls -l /proc/pid/fd
+
+
+
+  
+
+

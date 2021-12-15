@@ -1,0 +1,5 @@
+We can use the getconf command to obtain the limits and options implemented by a particular UNIX implementation.
+
+getconf ARG_MAX
+getconf NAME_MAX
+

@@ -1,0 +1,21 @@
+#include <sys/time.h>
+#include <sys/resource.h>
+
+int getrlimit(int resource, struct rlimit *rlim);
+
+The getrlimit() system calls get resource limits respectively.
+
+struct rlimit {
+	rlim_t rlim_cur; /*soft limit*/
+	rlim_t rlim_max; /*hard limit (ceiling for rlim_cur)*/
+};
+
+The soft limit is the value that the kernel enforces for the corresponding resource. 
+The hard limit acts  as  a  ceiling  for  the  soft
+       limit:  an  unprivileged process may set only its soft limit to a value
+       in the range from 0 up to the hard limit, and (irreversibly) lower  its
+       hard   limit.
+
+RLIMIT_NOFILE the max  no. of files for this process.
+
+

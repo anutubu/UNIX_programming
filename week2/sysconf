@@ -1,0 +1,13 @@
+The sysconf() function allows an application to obtain the values of system limits at run time.
+
+#include <unistd.h>
+
+long sysconf(int name);
+
+sysconf(_SC_ARG_MAX);
+sysconf(_SC_LOGIN_NAME_MAX);
+sysconf(_SC_OPEN_MAX);
+sysconf(_SC_OPEN_MAX);
+sysconf(_SC_NGROUPS_MAX);
+sysconf(_SC_PAGESIZE);
+sysconf(_SC_RTSIG_MAX);

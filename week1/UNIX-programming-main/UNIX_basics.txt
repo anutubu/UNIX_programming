@@ -1,0 +1,92 @@
+UNIX basics
+
+contains commands
+ls /bin
+[ 	cpio	echo	ln	ps	rump.dd      test
+cat	csh	ed	ls	pwd	sh
+chgrp	date	expr	mkdir	rcmd	sleep
+chio	dd	hostname  mt	rcp	stty
+chmod	df	kill	mv	rm	sync
+cp	domainname ksh	pax	rmdir	tar
+
+
+
+whatis command
+# whatis sh 
+  sh(1) - command interpreter (shell)
+
+/ usr/include/sys/socket.h
+
+Summary of UNIX history
+/usr/share/misc
+
+applications , shell, library routines, system calls , kernel
+
+System calls
+System calls are entry points into kernel code where their functions are implemented.
+They are documented in section 2 of manual pages
+
+Library calls
+Library calls are transfer to use code which performs the desired functions. They are documented 
+in section 3 of the maqnual pages
+
+IEEE POSIX standards
+
+man printf (general commands)
+man 3 printf (library function)
+man 2 write (syscall)
+
+https://pubs.opengroup.org/onlinepubs/9699919799/ : POSIX
+
+check for the requirement of each commands in the above link according to POSIX
+
+C features
+
+void * pointers
+abstract data types (makes UNIX portable ) (pid_t, size_t) 
+
+strerror, perror takes errno value and prints meaningful error message
+
+Exit code of last command
+echo $?
+
+Turn warning to error
+cc -Wall -Werror welcome.c
+
+Adding a flag and alias for using the flag in shell
+echo "CFLAGS='-Wall -Werror -Wextra">>~/.shrc
+echo "alias cc='cc \${CFLAGS}'">>~/.shrc
+
+What exactly is a shell ?
+simple-shell.c
+
+To get information for which 
+man sysexits
+
+Pipes :
+
+date stored in a variable of type time_t
+
+Process time: Measures in clock ticks
+
+clock time
+user CPU time
+system CPU time
+
+Standard I/O
+
+file descriptors : Small, non negative integers which identify a file to the
+kernel. The shell can redirect any file descriptor
+
+unbuffered I/O
+system calls
+
+buffered I/O
+library functions
+
+Any program executing in memory is a process. A process identified by PID. 
+
+Signal are a simple way to inform a process that a certain condition has
+occured.
+
+ 

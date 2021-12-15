@@ -1,0 +1,47 @@
+creat() is same as 
+open(path, O_CREAT | O_TRUNC | O_WRONLY, mode);
+
+#include <fcntl.h>
+int open(const char *pathname, int oflag,.../*mode_t mode*/);
+
+oflag:
+O_RDONLY - open read only
+O_WRONLY - open writing only
+O_RDWR - open for reading and writing
+O_APPEND - append on each write
+O_CREAT - create the file if it doesn't exist; requires mode argument
+O_EXCL - error if O_CREAT and file already exists
+O_TRUNC - truncate size to zero
+O_NONBLOCK - do not block on open or for data to become available
+O_SYNC - wait for physical I/O to complete
+
+int openat(int dirfd, const char *pathname, int oflag, .../*mode_t mode);
+which is used to handle relative pathnames in a different working directory in atomic fashion.
+pathname is determined relative to the directory associated with the file descriptor fd instead of the current working directory.
+
+errors while opening a file:
+
+EEXIST : O_CREAT | O_EXCL was specified, but the file exists
+EMFILE: process has already reached max no. of open file descrptors
+ENOENT: file does not exist
+EPERM: lack of permissions
+
+always write code like this
+if((fd = open(path, O_RDWR)<0) {
+	/*error*/
+}
+/* do stuff with fd */
+
+
+
+
+close a file
+
+#include <unistd.h>
+int close(fd);
+
+the kernel will automatically closes any open fd 
+to avoid leaking of fd always close
+
+n most cases it permissible even if the close fails
+hence we explicitl cast it to void

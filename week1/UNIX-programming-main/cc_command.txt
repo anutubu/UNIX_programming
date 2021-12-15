@@ -1,0 +1,29 @@
+cc command
+
+compile example.c with an executable examp_out
+cc example.c -o examp_out
+
+check for all errors and warnings
+cc example.c -Wall -o examp_out
+
+supress all the warnings
+cc example.c -w 
+
+Creates a debugging version of file example.c
+cc example.c -g -o examp_out_debug
+
+
+This command will compile the source_file.c file, and create an object file source_file.o, which can later be linked to create an executable output file.
+cc example.c -c 
+
+This command, while compiling the source_file.c file, will also search the specified directory for header files.
+cc example.c -L /home/mukkesh/Desktop
+
+ This command will compile the source_file.c file, and makes sure that the code follows strict ANSI standards. This will make sure that the code is portable to be compiled on any other system.
+cc -ansi example.c 
+
+These commands specified below will print the version of the cc command, the default target machine and built-in specification strings.
+cc -dumpversion
+
+ This command will compile the source_file.c file, and gives a verbose output.
+cc example.c -v

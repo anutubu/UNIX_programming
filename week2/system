@@ -1,0 +1,8 @@
+int system(const char *str);
+	returns 0 -- if executed succesfully
+	returns nonzero -- error while executing the command
+
+system("ls");
+
+Uses fork to create a child process that executes the shell command specified using execl
+

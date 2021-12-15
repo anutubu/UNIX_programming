@@ -1,0 +1,32 @@
+ctags : how we can use it to browse our code base
+
+
+/^getinput to search for a function
+we want input function in a seperate file and signal handling in a seperate file
+
+like any other C header file it protects itselfs against multiple includion via an '#ifdef' then provides the forward declaration of the function provided by the seperate source file
+
+#ifndef _GETINPUT_H
+#define _GETINPUT_H
+function declaration
+
+#endif
+
+ctags is a tool to index your code base and create a mapping of where functions are defined. With the help of resulting tags file, your editor can then easily let you automatically find and jump to the implementation and back
+
+ctags *
+see tags file
+ctrl+]
+ctrl+t 
+:ta sig_int
+
+cd /usr/src
+create a global tags file and use exuberant syntax. This version has a number of features and added compared to the system provided ctags(1) program.
+
+exctags -f ~/.tags -R -I __weak_Alias /usr/include /usr/src/lib
+
+echo "set tags=tags\ /home./anubhav/.tags" >> ~/.exrc
+echo "set tags+=~/.tags" >> ~/.vimrc
+
+jump to inplementation : ctrl + ] go back : ctrl + t
+jump to manual page : shift + k

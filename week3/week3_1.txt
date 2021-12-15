@@ -1,0 +1,80 @@
+#include <sys/stat.h>
+
+int stat(const char *path, struct stat *sb);
+int lstat(const char *path, struct stat *sb);
+int fstat(int fd, struct stat *sb);
+
+#include <sys/stat.h>
+#include <fcntl.h>
+
+int fstat(int fd, const char *path, struct stat *sb, int flag);
+
+To get meta information from the files 
+
+there is also an need to allow for atomically accesing the relative path name outside of the current working directory
+
+fstatat similarly to openat taking an additional file descriptor referencing a directory as an argument
+
+obtain file info without opening it
+
+struct stat {
+	dev_t st_dev; /* device number (filesystem) */
+	ino_t st_ino; /* i-node number (serial number) */
+	mod_t st_mode; /* file type & mode (permissions) */
+	dev_t st_rdev; /* device number for special files */
+	nlink_t st_nlink; /* no. of links */
+	uid_t st_uid; /* user ID of owner */
+	gid_t st_gid; /* group ID of owner */
+	off_t st_size; /* size in bytes, for regular files */
+	time_t st_atime; /* time of last access */
+	time_t st_mtime; /* time of last modification */
+	time_t st_ctime; /* time of last file status change */
+	long st_blocks; /* no. of 512-byte blocks allocated */
+	long st_blksize; /* optimal I/O block size */
+}
+
+sudo newfs -b 4096 /dev/rwd1a
+sudo mount /dev/wd1a /mnt
+sudo chown jschauma /mnt
+cd /mnt
+df .
+dd if=/dev/zero of=file bs=1024 count=1024
+
+-rw-r--r-- => st_mode
+1 => st_link
+jschauma => st_uid
+wheel => st_Gid
+1048576 = > st_size
+20:04 => from st_mtime
+
+file name is not a property of the file is a mapping found in the directory
+
+st_mode
+regular - most common, interpretation of data is up to application
+directory - contains names of other files and pointer to info on those files. a directory is a file -a special type of file, one that maps symbolic names - strings, which humans tend to find awfully convinient to inode nos and data blocks associated to that string.
+
+character special - uused for certain types of devices, e.g., terminal. There are devices which are represented as files under the /dev directory in the root of the file system These devices comes as either charecter special devices - terminals, for eg- and block devices -disk 
+
+block special - used for disk devices (typically)
+FIFO - used for IPC
+socket - used for network and non-network communication 
+
+symbolic link - points to another file => when accessed simply say "don't look at me - look at this file "
+
+lstat behaves just like stat, but if the file in question is of type symlink, we get the info about the symlink.
+
+a symlink is a file that says "nope, go look at the file over there" so when we call stat it will look at that file. So if we want to identify the symlink and  determine say the  the file ownership of symlinkwe need lstat.
+
+mkdir dir
+ln -s /dev/ttsy terminal
+ln -s dir dir2
+mkfifo fifo
+ln -s /var/run/log socket
+ln file file2
+
+we can unbreak the symlink simply by creating the target
+
+
+du -h file
+stat -f "%k' file
+ls -s => blocks 

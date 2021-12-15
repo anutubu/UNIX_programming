@@ -1,0 +1,9 @@
+ctrl + a c => create a new screen
+ctrl + a a => toggle between screens
+ctrl + a number => go to the numbered screen
+ctrl + a " => list the screen 
+ctrl + a A => rename the screen
+ctrl + a | => vertically split the current window
+ctrl + a tab => to move into the new window
+ctrl + a S => split horizontally
+ctrl + a d => delete screen session

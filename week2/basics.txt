@@ -1,0 +1,139 @@
+A file descriptor is a small non negative integer which identifies a file to the kernel
+
+Traditionally stdin, stdout and stderr are 0, 1 and 2 respectively but relying on magic nos is bad practice. Use STDIN_FILENO, STDOUT_FILENO, and STDERR_FILENO instead
+
+How many files a process can have ? openmax.c 
+
+fflush() is typically used for output stream only. Its purpose is to clear (or flush) the output buffer and move the buffered data to console (in case of stdout) or disk (in case of file output stream). Below is its syntax.
+
+Using system(), we can execute any command that can run on terminal if operating system allows. For example, we can call system(“dir”) on Windows and system(“ls”) to list contents of a directory.
+
+The getrlimit() and setrlimit() system calls can be used to get and set the resource limits such as files, CPU, memory etc. associated with a process.
+struct rlimit {
+    rlim_t rlim_cur;  /* Soft limit */
+    rlim_t rlim_max;  /* Hard limit (ceiling for rlim_cur) */
+};
+
+
+fstat() return information about a file. All of these system calls return a stat structure, which contains the following fields:
+
+    struct stat {
+        dev_t     st_dev;     /* ID of device containing file */
+        ino_t     st_ino;     /* inode number */
+        mode_t    st_mode;    /* protection */
+        nlink_t   st_nlink;   /* number of hard links */
+        uid_t     st_uid;     /* user ID of owner */
+        gid_t     st_gid;     /* group ID of owner */
+        dev_t     st_rdev;    /* device ID (if special file) */
+        off_t     st_size;    /* total size, in bytes */
+        blksize_t st_blksize; /* blocksize for file system I/O */
+        blkcnt_t  st_blocks;  /* number of 512B blocks allocated */
+        time_t    st_atime;   /* time of last access */
+        time_t    st_mtime;   /* time of last modification */
+        time_t    st_ctime;   /* time of last status change */
+    };
+
+
+int creat(const char *pathname, mode_t mode); => mode access permission
+creat,close then open it again inearly days not simultaneously read and write creat similar to
+open(path, O_CREAT| O_TRUNC| O_WRONLY, mode);
+
+open returns the file discriptor and not takes as an argument
+
+O_RDONOLY, OWRONLY, O_RDWR, O_APPEND etc
+openat relative pathname for different working directory in an atomic fashion
+
+int close(int fd); exit atomacllay closes fd
+
+ssize_t read(int fd, void *buf, size_t num);
+returns 0. of bytes read, -1 on error
+There may not be enough data available for reading in subsequent calls read calls for new data
+
+write(int fd, void *buf, size_t num);
+no. of bytes written . If file open with O_APPEND flag it will start from EOF
+
+off_t lseek(int fd, off_t offset, int whence)
+SEEK_SET bytes from the beginning of the file
+SEEK_CUR bytes from the current file position
+SEEK_END bytes from the end of the file
+
+you can't seek on a pipe hence lseek cannot work on an input from a pip
+can't seek on a fifos
+
+df . - command
+in a spaarse file created usinf lseek kernel pretends that there is null bytes verified by the command hexdump -c file.hole but actually there is nothing there in the disk.
+What happens when we copy this file
+
+ls -ls => no. of blocks print
+On the copying the file the the disk utilizes the nothing space
+HFS filesystem does not supports sparse files 
+
+In linux cp commandalso detects the sparse file to increase usage of disk use cat file.hole > file.nohole
+
+The reason we can't keep gaining efficiency by increasing the buffer has to do with the file system
+. The file system has a fixed block size in which it reads data from the disk and no matter how large your buffer is the file system cannot read more efficiently than whatever that process is. 
+
+dd - convert and copy a file, bs - bytes, if=FILE read from FILE instead of stdin, of=FILE write to FILE instead of stdout
+
+dd if=/dev/urandom of=tmp/file$n bs=$((1024*1024)) count=100 2>/dev/null;
+
+UNIX is multiuser , multitasking system => more than one process can act on a single file simultaneously. 
+Each process table entry has a table of file descriptors which contain:
+	the fd flags
+	a pointer to file table entry
+The kernel maintains a file table; each entry contains
+	file status flags (O_APPEND, O_SYNC, O_RDONLY, etc.)
+	current offset
+	pointer to a vnode table entry
+A vnode structure contains
+	vnode information
+	inode information (such as current file size)
+
+	_fd flags______file pointer__        ____file table______        ____v-node table ____
+fd 0:  |          |                 |	    |file status flags	|	| v-node information |
+fd 1:  |          |                 | ----> |current file offset| ----> | i-node information |
+fd 2:  |          |                 |       | v-node pointer    |       | current file size  |
+
+if process opens same file twice then diff file table entries but pointing to same vnode information. If we write data and the resulting offset is larger than file size we simply copy current offset to inode file size. 
+
+
+O_APPEND first offset= current file size , write(32), offset+=32 
+
+lseek does not need to go to the disk and fetch information from there rather it fetch information entirely from the meta info.
+
+Atomic operations are operations which are guaranteed to complete in the entirely without another process being ble to interfere or, not at all . 
+In adition to read and write there are pread and pwrite which takes as argument offset to which they will atomically seek before issuing read and write operation. The current file offset will then not be changed meaning that after a call to these functions your current position in the file is the same as before you made the call. As usual if an error is encountered theses return -1 and set errno.
+ 
+We can suppress error messages by redirecting 2>/dev/null
+in general messages to stderr are unbuffered while I/O to stdout is likely to be buffered which is why u will see error msgs prior to nrmal output when bth are connected to a  terminal. But of course there's a better way to ensure stderr and stdout go to the same place . Put stout to a file and put stderr to wherever stdout currently points to. >file 2>&1
+
+dup system call duplicates an existing file discriptor and you get back the second file handle pointing to the same file table entry as the first one.
+for redirection of existing fd we can use dup2 The existing fd will be closed and instead ointed to the original file table entry.
+dup2(STDOUT_FILENO, STDERR_FILENO) same as 2>&1
+
+using fcntl we can do whole set of things we can get or set any flags, we can duplicate file descriptor via fcntl as well do a no. of os specific things
+ F_DUPED - duplicate file descriptors
+ F_GETFD - get file descriptor flags
+ F_SETFD - set file descriptor flags
+ F_GETFL - get file status flags
+ F_SETFL - set file status flags
+
+Synchronous output will wait for I/O to be flushed to disk after each call but asynchronous output allows the OS to handle this more efficiently and cache IO a bit. 
+flags = fcntl(STDOUT_FILENO, F_GETFL,0)
+flags |= O_SYNC;
+fcntl(STDOUT_FILENO, F_SETFL, flags)
+synchronous mode performance weaker than asynchronous 
+
+
+  echo two | cat /dev/stdin
+/dev/stdin, /dev/stderr, /dev/stdout
+
+echo $$ (pid for the current shell)
+
+ echo foo | ls -l /dev/stdin
+ echo foo | ls -l /proc/self/fd/0
+
+
+
+
+

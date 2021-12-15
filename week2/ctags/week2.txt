@@ -1,0 +1,20 @@
+ file discriptor is a small, non-negative integer which identifies a file to the kernel.
+stdin : 0, STDIN_FILENO
+stdout: 1, STDOUT_FILENO
+stderr: 2, STDERR_FILENO
+
+The getdtablesize() function is an equivalent of sysconf() with _SC_OPEN_MAX
+
+open()
+close()
+read()
+write()
+lseek()
+
+#include <fcntl.h>
+int creat(const char *pathname, mode_t mode);
+//mode => description of access permission as the second argument
+return fd on success and -1 on error
+
+creat returns a fd open in write only mode 
+

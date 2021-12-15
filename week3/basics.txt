@@ -1,0 +1,187 @@
+stat, lstat and fstat . The fstat version differs from the others in that it accepts a file discriptor 
+To obtain information about the file all the meta info about the contents of a file we introduce struct family of syscalls
+
+#include <sys/sat.h>
+
+int stat(const char *path, struct stat *sb);
+int lstat(const char *path, struct stat *sb);
+int fstat(int fd, struct stat *sb);
+
+for atomically accesing relative paths
+int fstatat(int fd, const char *path,struct stat *sb, int flag)
+
+
+struct stat {
+		dev_t     st_dev;    	/*ID of device containing file */
+		ino_t     st_ino;    	/*Inode number*/
+		mode_t    st_mode;  	/*file type & mode*/
+		nlink_t   st_nlink;	    /*no. of hard links*/
+		uid_t     st_uid;		/*user ID of owner*/
+		gid_t     st_gid;       /*group ID of owner*/
+		dev_t     st_rdev;      /*Device ID(if special file)*/
+		off_t     st_size;      /*Total siize, in bytes*/
+		blksize_t st_blksize;   /*blocksize for filesystem I/O*/
+		blkcnt_t  st_blocks;    /*Number of 512B blocks allocated*/
+}
+
+mount | column -t   //display information about the mounted filesystems
+df
+df -H               //file system disk space usage
+
+du -ch /home        //disk usage
+
+sudo newfs -b 4096 /dev/rwd1a
+sudo mount /dev/wd1a /mnt
+sudo chown anubhav /mnt
+
+-rw-r--r-- 1 anubhav anubhav 1048576 Dec 11 11:53 file
+---------- -   |        |       |    ------------  |
+    |      | st_uid  st_gid  st_size      |       not from stat at all
+  st_mode st_nlink                     st_mtime 
+
+  st_mode contains the file type and permissions
+  1> regular -  
+  2>  directory
+  3 > devices
+      3.1> character special
+      3.2> bloack spacial
+  4> FIFO also names as named pipe interprocess communication endpoint just like a shell pipe that is manifested oin a file system to allow unrelated processes to communicate with one another 
+  5> socket - different from network sockets although the API used aer same 
+  6> symbolic links - files which contains as their sole content the path name of another file and which when accesed simply say don't look at me look at this file
+
+  if we call stat with a symlink it will go and look at that file over there so if we want to find the symlink and determine the file ownership we need lstat.
+
+ln -s /dev/tty terminal  ----> character special device
+ln -s /dev/wd0a disk     ----> block special device
+ln -s /var/run/log socket ----> file of type socket
+ln -s /tmp/nosuchfile broken-link -----> file that does'nt even exist
+
+We can unbreak symlink simply by creating targets. No need to make any changes to the symlink itself  as soon as the target exists the program will be able to stat it via the symlink
+
+If we manupulate one file in a har link other file is changed too and both have the same inode no.
+
+ls -ls file  : based on 512 block size
+BLOCKSIZE=4096 ls -ls file
+
+Every process has six or more IDs associated with it:
+real user ID 	|	who we really are
+real group ID   |
+-----------------------------------------
+effective user ID  |  used for file access permission checks
+effective group ID |       			
+-----------------------------------------
+saved set-user-ID  | saved by exec functions 
+saved set-group-ID |
+
+whenever a file is setuid, set the effective user ID to st_uid
+1) exec sets the saved setuid  
+2) chanding the effective uid is allowed to either the real uid or saved setuid
+
+ping command sends out ICMP echo-request packets to the destination, awaiting echo-reply pacets inreturn
+Sending ICMP packets requires the program to open the network socket in raw mode whch require super user priviledges. without the ability to elevate priviledges only root could ping host
+
+Inprder to change the real or effective uid of a process  we can call setuid and seteuid syscalls 
+
+calling seteuid willl succed if the argument given is either the current real uid or the saved setuid and it will only set the euid. setuid pn the other hand will always set both the real uid as well as the euid as well as the saved setuid. 
+After calling setuid u can no longer regain any possible elevated priviledges you may have had before .
+
+A process inherits its "real" user identity across a fork() and an exec() but ... if the program being exec'd has the setuid bit turned on it runs with the effective ID of its owner Access permission checks are made against eff. ID.
+
+ ls -l ping `which ping`
+-rwsr-xr-x 1 root    root    64424 Mar 10  2017 /bin/ping
+-rwxr-xr-x 1 anubhav anubhav 64424 Dec 11 14:43 ping
+
+
+chrsi | chris | chris   exec()
+chris | root  | root  
+
+chris | chris | root  seteuid(realid)
+chris | root  | root  seteuid(effecid)
+access 
+Given the pathname and the mode we're interested in testing access will tell us whether the real uid will be able to perform the action
+access wil help us know that real uid will not be able to open th file whereas effective uid can
+
+int access(const char*path,int mode);
+int faccess(int fd,const char*path, int mode,int flags);
+
+the permissions for a file are encoded in the struct stat st_mode. Broken down to owner, user, group , other.
+
+To open a file we need a mapping of file to the inode which we said earlier 
+is stored in a file of type "directory" . Performing this lookup requires execute permissions on the directory read permissions of a directory are required to list only the contents of a directory to elevate each entry . We need to execute permissions on all directories in the path specified when opening a file. To open /var/tmp/dir we need to first open /vr hence require execute permissions on \.
+
+You should be able to execute a directory file is in to open a file
+To open in O_RDONLY or O_RDWR need read permissions
+To open in O_WRONLY or ORDWR need write permissions 
+To use O_TRUNC need write permission
+To create a new file, must have write+execute permission for directory
+To delete a file need write+execute on directory
+To execute a file we need execute permission but not read permissions but for interpreter languages like python u need scripts.
+
+If euid==0 grant access
+if euid == st_uid
+	if appropriate user permission bit is set grnt access
+	else deny access
+if eguid == st_gid
+	if appropriate group permission bit is set grnt access
+	else deny access
+
+Once the uid check is met the system does'nt care for the group permission
+
+chown :users /tmp/file  ****/ changing group ownership of a file to users  
+
+#include <sys/stat.h>
+#include <fcntl.h>
+
+int chmod(const char *path, mode_t mode);
+int lchmod(const char *path, mode_t mode);
+int fchmod(const char *path, mode_t mode);
+it fchmodat(int fd, const char *path, mode_t mode,int flag);
+
+Changes the permission bits on the file. Must be either euid 0 or euid ==st_uid
+
+if file is missing group execute bit the capital S will be shown.
+
+#include <unistd.h>
+#include <fcntl.h>
+
+int chown(const char *path, uid_t owner, gid_t group);
+int lcjown(const char *path, uid_t owner, gid_t group);
+int fchown(const char *path, uid_t owner, gid_t group);
+int fchownat(int fd, const char *path, uid_t owner,gid_t group, int flag);
+
+Changes st_uid and st_gid.Generally requires euid 0
+ 
+non root user can set st_gid if
+euid = st_uid
+owner == st_uid and group == egid
+
+-1 in gid => won't change gid when calling chown
+
+Only root and owner of the file can change the permissions 
+
+When creating a new file it will inherit:
+st_uid == effective UID
+st_gid == ...either:
+	effective GID of the process 
+	GID of directory in which it is creaed
+
+mkdir dir
+(base) anubhav@anubhav-HP-Pavilion-Laptop-15-cc1xx:~/Documents/UNIX/week3$ ls -la dir
+total 8
+drwxr-xr-x 2 anubhav anubhav 4096 Dec 12 13:29 .
+drwxr-xr-x 3 anubhav anubhav 4096 Dec 12 13:04 ..
+-rw-r--r-- 1 anubhav anubhav    0 Dec 12 13:29 file
+(base) anubhav@anubhav-HP-Pavilion-Laptop-15-cc1xx:~/Documents/UNIX/week3$ chown :users dir
+chown: changing group of 'dir': Operation not permitted
+(base) anubhav@anubhav-HP-Pavilion-Laptop-15-cc1xx:~/Documents/UNIX/week3$ chown :null dir
+chown: invalid group: ‘:null’
+(base) anubhav@anubhav-HP-Pavilion-Laptop-15-cc1xx:~/Documents/UNIX/week3$ chown :adm dir
+(base) anubhav@anubhav-HP-Pavilion-Laptop-15-cc1xx:~/Documents/UNIX/week3$ touch dir/file2
+(base) anubhav@anubhav-HP-Pavilion-Laptop-15-cc1xx:~/Documents/UNIX/week3$ ls -la dir
+total 8
+drwxr-xr-x 2 anubhav adm     4096 Dec 12 13:31 .
+drwxr-xr-x 3 anubhav anubhav 4096 Dec 12 13:04 ..
+-rw-r--r-- 1 anubhav anubhav    0 Dec 12 13:29 file
+-rw-r--r-- 1 anubhav anubhav    0 Dec 12 13:31 file2
+
+umask is a file creation mode mask in which any bits toggled on are turned off when creating a file. we can use umask in pocess to ensure any files created later on will have certain default permissions.  umask only applies for current process .

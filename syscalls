@@ -1,0 +1,36 @@
+WEEK1
+getlogin()
+fork()        #### sys/types.h
+strerror()    #### errno.h
+execlp()      #### unistd.h
+opendir()     #### sys/types.h, dirent.h
+readdir()     #### sys/types.h, dirent.h
+closedir()    #### sys/types.h, dirent.h
+struct dirent #### d_name[], d_ino, d_namelen, d_type
+DIR	      #### datatype
+read()	      #### unistd.h 
+write()	      #### unistd.h
+signal()      #### signal.h SIGHUP, SIGINT, SIGQUIT, SIGILL, SIGTRAP, SIGABRT
+fflush()      #### stdio.h
+system()      #### stdlib.h	
+sysconf()     #### unistd.h
+getrlimit()   #### sys/resource.h
+struct rlimit #### sys/resource.h
+lseek         #### unistd.h
+dup	      #### unistd.h
+dup2	      #### unistd.h
+fcntl	      #### fcntl.h
+fstat         #### sys/stat.h
+lstat         #### sys/stat.h
+stat          #### sys/stat.h
+fstatat       #### sys/stat.h
+struct stat   #### sys/stat.h
+setuid        ###a unistd.h
+seteuid       #### unistd.h
+getuid        #### unistd.h
+geteuid       #### unistd.h
+access	      #### unistd.h
+chmod         #### sys/stat.h , fcntl and its derivatives
+chown         #### unistd, fcntl.h
+umask         ####
+

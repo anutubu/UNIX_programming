@@ -1,0 +1,54 @@
+read , write and lseek syscalls
+#include <unistd.h>
+ssize_t read(int fd, void *buf, size_t num);
+		returns: no. of bytes read; 0 on EOF, -1 on error
+
+read will begin reading at the current offset and increments the offset by the number of bytes read.
+
+reading fewer than num bytes is nit an error condition.
+
+write
+#include <unistd.h>
+ssize_T write(int fd, void *buf, size_t num);
+
+write returns the number of bytes written
+For regular files, write begins writing at the current offset unless O_APPEND has been specified, in which case the offse is first set to the end of the file).
+
+
+#include <sys/types.h>
+#include <fcntl.h>
+
+off_t lseek(int fd, off_t offset, int whence);
+
+whence :
+
+SEEK_SET : bytes from the begining of the file
+SEEK_CUR : bytes from the current file
+SEEK_END : bytes from the end of the file
+
+seek to a negative offset
+seek 0 bytes from the current position
+seek past the end of the file
+
+we cannot seek on a pipe
+we cannot seek on a fifo
+
+hole => seeking past the end of the file
+
+we created a file used lseek to move data them wrote the data therfore just 20 bytes of data now if we read a file using hexdump the kernel says "well, theres nothing there but i don't know how to represent nothing so here have a bunch of null bytes instead;
+The kernel pretends that there is null bytes but on disk there actually aren;t any bytes - it's a sparse filr: it has a hole.
+
+cp file.hole file.nohole // cp writes the null bytes to the disk
+
+hexdump -c file.nohole
+
+file.nohole has same no. of blocks as file.hole
+
+buffer size beyond 16k has negligible difference
+depends n block size
+
+finding optimal i/o size
+(use stat command)
+stat -f "%k" tmp/file1
+
+
